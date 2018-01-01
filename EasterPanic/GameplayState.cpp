@@ -342,6 +342,20 @@ void GameplayState::renderEditingActionList(StateMachine & machine)
 		if(i == this->selectedAction)
 			arduboy.drawRect(drawX - 2, drawY - 2, 12, 12, Arduboy::ColourWhite);	
 	}
+	{
+		constexpr const uint8_t x = CalculateCentreX(HalfScreenWidth, ScreenWidth, ActionIconWidth);
+		constexpr const uint8_t y = ScreenHeight - (ActionIconHeight + 2);
+		auto & action = this->actions[this->selectedAction];
+		Sprites::drawOverwrite(x, y, ActionIcons, static_cast<uint8_t>(action.getId()));
+		if(action.getId() == ActionId::ForStart)
+		{
+			arduboy.setCursor(x + ActionIconWidth + 2, y + ((ActionIconHeight - FontLineHeight) / 2));
+			arduboy.print(action.getArgument());
+			
+			auto arrowX = this->editingArgument ? x + ActionIconWidth + 2 : x + 2;			
+			Sprites::drawOverwrite(arrowX, y - SmallArrowImageHeight, SmallArrowImages, 2);
+		}
+	}
 }
 
 //
