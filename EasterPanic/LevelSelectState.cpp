@@ -36,54 +36,27 @@ void LevelSelectState::update(StateMachine & machine)
 
 void LevelSelectState::render(StateMachine & machine)
 {
+	// Layout constants
 	const auto centreY = CalculateCentreY(FontLineHeight);
-	const auto levelCount = ArrayLength(Levels);
-	const auto lineHeight = FontLineHeight + 4;
+	const auto singleMargin = 2;
+	const auto doubleMargin = singleMargin * 2;
+	const auto lineHeight = FontLineHeight + doubleMargin;
 	
 	auto arduboy = machine.getContext().arduboy;
 	
-	arduboy.setCursor(4, centreY);
-	arduboy.print(FlashString(StringLevelHeading));
-	arduboy.print(this->index);
-	
-	// ToDo: tidy up, make a for loop or something
-	if(this->index  > 0)
-	{	
-		arduboy.setCursor(4, centreY - (lineHeight * 1));
-		arduboy.print(FlashString(StringLevelHeading));
-		arduboy.print(this->index - 1);	
-	}
-	if(this->index  > 1)
+	// Draw level names, including previous two and next two
+	for(int8_t i = -2; i <= +2; ++i)
 	{
-		arduboy.setCursor(4, centreY - (lineHeight * 2));
-		arduboy.print(FlashString(StringLevelHeading));
-		arduboy.print(this->index - 2);
-	}
-	if(this->index > 2)
-	{
-		arduboy.setCursor(4, centreY - (lineHeight * 3));
-		arduboy.print(FlashString(StringLevelHeading));
-		arduboy.print(this->index - 3);	
+		const int8_t index = this->index + i; // int8_t is cheaper than integer promotion
+		const size_t levelCount = ArrayLength(Levels); // Caching saves 2 bytes
+		if(index >= 0 && static_cast<size_t>(index) < levelCount)
+		{
+			arduboy.setCursor(doubleMargin, centreY + (lineHeight * i));
+			arduboy.print(FlashString(StringLevelHeading));
+			arduboy.print(index);
+		}
 	}
 	
-	if(this->index + 1 < levelCount)
-	{	
-		arduboy.setCursor(4, centreY + (lineHeight * 1));
-		arduboy.print(FlashString(StringLevelHeading));
-		arduboy.print(this->index + 1);
-	}
-	if(this->index + 2 < levelCount)
-	{
-		arduboy.setCursor(4, centreY + (lineHeight * 2));
-		arduboy.print(FlashString(StringLevelHeading));
-		arduboy.print(this->index + 2);
-	}
-	if(this->index + 3 < levelCount)
-	{
-		arduboy.setCursor(4, centreY + (lineHeight * 3));
-		arduboy.print(FlashString(StringLevelHeading));
-		arduboy.print(this->index + 3);
-	}
-	
-	arduboy.drawRect(2, centreY - 2, Arduboy::ScreenWidth - 4, FontLineHeight + 4, Arduboy::ColourWhite);
+	// Draw selector
+	arduboy.drawRect(0 + singleMargin, centreY - singleMargin, Arduboy::ScreenWidth - doubleMargin, lineHeight, Arduboy::ColourWhite);
 }
