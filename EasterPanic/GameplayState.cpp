@@ -274,7 +274,7 @@ void GameplayState::renderOptions(StateMachine & machine)
 {
 	auto arduboy = machine.getContext().arduboy;
 	
-	const auto x = HalfScreenWidth + 4 + (2 * FontCharWidth);
+	const auto x = (2 * FontCharWidth);
 	const auto yBase = 4;
 	
 	for(uint8_t i = 0; i < ArrayLength(options); ++i)
@@ -296,13 +296,13 @@ void GameplayState::updateEditingActionList(StateMachine & machine)
 {
 	auto arduboy = machine.getContext().arduboy;
 	
-	if(arduboy.justPressed(Arduboy::ButtonLeft))
+	if(arduboy.justPressed(Arduboy::ButtonUp))
 	{
 		if(this->selectedAction > this->actions.getFirstIndex())
 			--this->selectedAction;
 	}
 	
-	if(arduboy.justPressed(Arduboy::ButtonRight))
+	if(arduboy.justPressed(Arduboy::ButtonDown))
 	{
 		if(this->selectedAction < this->actions.getLastIndex())
 			++this->selectedAction;
@@ -322,8 +322,44 @@ void GameplayState::updateEditingActionList(StateMachine & machine)
 void GameplayState::renderEditingActionList(StateMachine & machine)
 {
 	auto arduboy = machine.getContext().arduboy;
+	{
+		// Layout constants
+		const auto centreY = CalculateCentreY(ActionIconHeight);
+		const auto singleMargin = 2;
+		const auto doubleMargin = singleMargin * 2;
+		
+		const auto selectedIconHeight = ActionIconHeight + doubleMargin;
+		const auto selectedIconWidth = ActionIconWidth + doubleMargin;
+				
+		// Draw level names, including previous two and next two
+		for(int8_t i = -2; i <= +2; ++i)
+		{
+			const int8_t index = this->selectedAction + i; // int8_t is cheaper than integer promotion
+			const size_t levelCount = ArrayLength(Levels); // Caching saves 2 bytes
+			if(index >= 0 && static_cast<uint8_t>(index) < this->actions.getCount())
+			{
+				const auto x = ((ScreenWidth / 4) * 3) + doubleMargin;
+				const auto y = centreY + (selectedIconHeight * i);
+				
+				auto & action = this->actions[index];
+				Sprites::drawOverwrite(x, y, ActionIcons, static_cast<uint8_t>(action.getId()));
+				
+				arduboy.setCursor(x + selectedIconWidth, y);
+				arduboy.print(index);
+				
+				if(action.getId() == ActionId::ForStart)
+				{
+					arduboy.setCursor(x + selectedIconWidth, y + FontLineHeight);
+					arduboy.print(action.getArgument());				
+				}
+			}
+		}
+		
+		// Draw selector
+		arduboy.drawRect(((ScreenWidth / 4) * 3) + singleMargin, centreY - singleMargin, selectedIconWidth, selectedIconHeight, Arduboy::ColourWhite);
+	}
 	
-	auto x = HalfScreenWidth + 4;
+	/*auto x = HalfScreenWidth + 4;
 	auto y = 2;
 	
 	for(uint8_t i = 0; i < this->actions.getCount(); ++i)
@@ -355,7 +391,7 @@ void GameplayState::renderEditingActionList(StateMachine & machine)
 			auto arrowX = this->editingArgument ? x + ActionIconWidth + 2 : x + 2;			
 			Sprites::drawOverwrite(arrowX, y - SmallArrowImageHeight, SmallArrowImages, 2);
 		}
-	}
+	}*/
 }
 
 //
@@ -368,37 +404,26 @@ void GameplayState::updateEditingCurrentAction(StateMachine & machine)
 	
 	auto & action = this->actions[this->selectedAction];
 	
-	if(arduboy.justPressed(Arduboy::ButtonUp))
-	{
-		if(this->editingArgument)
-		{
-			if(action.getArgument() < 255)
-				++action.getArgument();
-		}
-		else
-			action.getId() = previousActionIdWrapped(action.getId());
-	}
-	
-	if(arduboy.justPressed(Arduboy::ButtonDown))
-	{
-		if(this->editingArgument)
-		{
-			if(action.getArgument() > 0)
-				--action.getArgument();
-		}
-		else
-			action.getId() = nextActionIdWrapped(action.getId());
-	}
-	
 	if(arduboy.justPressed(Arduboy::ButtonRight))
 	{
-		if(action.getId() == ActionId::ForStart)
-			this->editingArgument = true;
+		action.getId() = nextActionIdWrapped(action.getId());
 	}
 	
 	if(arduboy.justPressed(Arduboy::ButtonLeft))
 	{
-		this->editingArgument = false;
+		action.getId() = previousActionIdWrapped(action.getId());
+	}
+	
+	if(arduboy.justPressed(Arduboy::ButtonUp))
+	{
+		if(action.getArgument() < 255)
+			++action.getArgument();
+	}
+	
+	if(arduboy.justPressed(Arduboy::ButtonDown))
+	{
+		if(action.getArgument() > 0)
+			--action.getArgument();
 	}
 	
 	if(arduboy.justPressed(Arduboy::ButtonA))
@@ -410,7 +435,44 @@ void GameplayState::updateEditingCurrentAction(StateMachine & machine)
 void GameplayState::renderEditingCurrentAction(StateMachine & machine)
 {
 	auto arduboy = machine.getContext().arduboy;
-	{	
+	{
+		// Layout constants
+		const auto centreY = CalculateCentreY(ActionIconHeight);
+		const auto singleMargin = 2;
+		const auto doubleMargin = singleMargin * 2;
+		
+		const auto selectedIconHeight = ActionIconHeight + doubleMargin;
+		const auto selectedIconWidth = ActionIconWidth + doubleMargin;
+				
+		// Draw level names, including previous two and next two
+		for(int8_t i = -2; i <= +2; ++i)
+		{
+			const int8_t index = this->selectedAction + i; // int8_t is cheaper than integer promotion
+			const size_t levelCount = ArrayLength(Levels); // Caching saves 2 bytes
+			if(index >= 0 && static_cast<uint8_t>(index) < this->actions.getCount())
+			{
+				const auto x = ((ScreenWidth / 4) * 3) + doubleMargin;
+				const auto y = centreY + (selectedIconHeight * i);
+				
+				auto & action = this->actions[index];
+				Sprites::drawOverwrite(x, y, ActionIcons, static_cast<uint8_t>(action.getId()));
+				
+				arduboy.setCursor(x + selectedIconWidth, y);
+				arduboy.print(index);
+				
+				if(action.getId() == ActionId::ForStart)
+				{
+					arduboy.setCursor(x + selectedIconWidth, y + FontLineHeight);
+					arduboy.print(action.getArgument());				
+				}
+			}
+		}
+		
+		// Draw selector
+		arduboy.drawRect(((ScreenWidth / 4) * 3) + singleMargin, centreY - singleMargin, selectedIconWidth, selectedIconHeight, Arduboy::ColourWhite);
+	}
+	
+	/*{	
 		auto x = HalfScreenWidth + 4;
 		auto y = 2;
 		
@@ -444,7 +506,7 @@ void GameplayState::renderEditingCurrentAction(StateMachine & machine)
 			auto arrowX = this->editingArgument ? x + ActionIconWidth + 2 : x + 2;			
 			Sprites::drawOverwrite(arrowX, y - SmallArrowImageHeight, SmallArrowImages, 2);
 		}
-	}
+	}*/
 }
 
 //
@@ -655,19 +717,20 @@ void GameplayState::renderGrid(StateMachine & machine)
 {
 	auto arduboy = machine.getContext().arduboy;
 
+	auto offsetX = ScreenWidth / 4;
 	for(uint8_t y = 0; y < TileGrid::Height; ++y)
 	for(uint8_t x = 0; x < TileGrid::Width; ++x)
 	{
 		auto tile = tiles.getItem(x, y);
 		if(tile.isSolid())
-			arduboy.drawRect(x * 8, y * 8, SmallRabbitImageWidth, SmallRabbitImageHeight, Arduboy::ColourWhite);
+			arduboy.drawRect(offsetX + x * 8, y * 8, SmallRabbitImageWidth, SmallRabbitImageHeight, Arduboy::ColourWhite);
 	}
-	arduboy.drawRect(0, 0, SmallRabbitImageWidth * TileGrid::Width, SmallRabbitImageHeight * TileGrid::Height, Arduboy::ColourWhite);
+	arduboy.drawRect(offsetX, 0, SmallRabbitImageWidth * TileGrid::Width, SmallRabbitImageHeight * TileGrid::Height, Arduboy::ColourWhite);
 }
 
 void GameplayState::renderEntity(StateMachine & machine)
 {
-	Sprites::drawOverwrite(player.x * 8, player.y * 8, SmallRabbitImages, static_cast<uint8_t>(player.direction));
+	Sprites::drawOverwrite((ScreenWidth / 4) + player.x * 8, player.y * 8, SmallRabbitImages, static_cast<uint8_t>(player.direction));
 	//Sprites::drawExternalMask(player.x * 8, player.y * 8, SmallRabbitImages, SmallRabbitMasks, static_cast<uint8_t>(player.direction), static_cast<uint8_t>(player.direction));
 }
 
@@ -675,7 +738,7 @@ void GameplayState::renderCollectables(StateMachine & machine)
 {
 	for(uint8_t i = 0; i < collectables.getCount(); ++i)
 	{
-		Sprites::drawOverwrite(collectables[i].x * 8, collectables[i].y * 8, SmallCollectableImages, 0);
+		Sprites::drawOverwrite((ScreenWidth / 4) + collectables[i].x * 8, collectables[i].y * 8, SmallCollectableImages, 0);
 		//Sprites::drawExternalMask(collectables[i].x * 8, collectables[i].y * 8, SmallCollectableImages, SmallCollectableMasks, 0, 0);
 	}
 }
