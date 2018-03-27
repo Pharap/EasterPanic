@@ -1,6 +1,6 @@
 #pragma once
 #include "../Direction.h"
-#include "../Collectable.h"
+#include "../Point2.h"
 
 constexpr const uint8_t Level3MaxActions = 12;
 constexpr const uint8_t Level3PlayerX = 2;
@@ -19,17 +19,17 @@ const uint8_t Level3TileData[] PROGMEM =
 	0xFF, // 11111111
 };
 
-const Collectable Level3Collectables[] PROGMEM =
+const PointU8 Level3Collectables[] PROGMEM =
 {
-	Collectable(1, 2),
-	Collectable(1, 5),
-	
-	Collectable(6, 2),
-	Collectable(6, 5),
-	
-	Collectable(2, 1),
-	Collectable(5, 1),
-	
-	Collectable(2, 6),
-	Collectable(5, 6),
+	PointU8(1, 2),
+	PointU8(1, 5),
+
+	PointU8(6, 2),
+	PointU8(6, 5),
+
+	PointU8(2, 1),
+	PointU8(5, 1),
+
+	PointU8(2, 6),
+	PointU8(5, 6),
 };

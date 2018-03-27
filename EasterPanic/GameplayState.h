@@ -2,7 +2,7 @@
 
 #include "Game.h"
 #include "Entity.h"
-#include "Collectable.h"
+#include "Point2.h"
 #include "Action.h"
 #include "Array.h"
 #include "List.h"
@@ -83,7 +83,7 @@ private:
 private:
 	TileGrid tiles;
 	Entity player;
-	List<Collectable, 16> collectables;
+	List<PointU8, 16> collectables;
 	
 	Stack<ForLoopState, 8> forStack;	
 	List<Action, 21> actions;
