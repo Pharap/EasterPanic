@@ -27,6 +27,8 @@ void TitleScreenState::update(StateMachine & machine)
 
 	if (arduboy.justPressed(Arduboy::ButtonDown))
 	{
+		// This line causes a warning while there's only one menu option.
+		// The warning will go away when more options are added.
 		if (this->option < MaxOption)
 			++this->option;
 	}
