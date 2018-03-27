@@ -47,7 +47,7 @@ void LevelSelectState::render(StateMachine & machine)
 	auto arduboy = machine.getContext().arduboy;
 	
 	// Draw level names, including previous two and next two
-	for(int8_t i = -2; i <= +2; ++i)
+	for(int8_t i = minOffset; i <= maxOffset; ++i)
 	{
 		const int8_t index = this->index + i; // int8_t is cheaper than integer promotion
 		const uint8_t levelCount = ArrayLength(Levels); // Caching saves progmem
