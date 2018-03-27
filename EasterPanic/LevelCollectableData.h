@@ -5,25 +5,25 @@
 class LevelCollectableData
 {
 public:
-	uint8_t collectableCount;
-	PointU8 const * collectables;
+	uint8_t collectableCount = 0;
+	const PointU8 * collectables = nullptr;
 	
 public:
-	LevelCollectableData(void) = default;
+	constexpr LevelCollectableData(void) = default;
 	
-	constexpr LevelCollectableData(uint8_t collectableCount, PointU8 const * collectables)
+	constexpr LevelCollectableData(uint8_t collectableCount, const PointU8 * collectables)
 		: collectableCount(collectableCount), collectables(collectables)
+	{
+	}
+
+	constexpr LevelCollectableData(const PointU8 (&)[0])
+		: collectableCount(0), collectables(nullptr)
 	{
 	}
 		
 	template< size_t size >
-	constexpr LevelCollectableData(PointU8 const (&collectables)[size])
+	constexpr LevelCollectableData(const PointU8 (&collectables)[size])
 		: collectableCount(size), collectables(collectables)
-	{
-	}
-
-	constexpr LevelCollectableData(PointU8 const (&)[0])
-		: collectableCount(0), collectables(nullptr)
 	{
 	}
 };
