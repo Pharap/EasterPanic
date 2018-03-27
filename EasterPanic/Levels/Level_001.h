@@ -14,14 +14,14 @@ namespace EasterPanic
 
 		const uint8_t TileData[] PROGMEM =
 		{
-			0xFF, // 11111111
-			0xFF, // 11111111
-			0xC3, // 11000011
-			0xDB, // 11011011
-			0xDB, // 11011011
-			0xC3, // 11000011
-			0xFF, // 11111111
-			0xFF, // 11111111
+			0x00, // 00000000
+			0x7E, // 01111110
+			0x42, // 01000010
+			0x5A, // 01011010
+			0x5A, // 01011010
+			0x42, // 01000010
+			0x7E, // 01111110
+			0x00, // 00000000
 		};
 
 		const PointU8 Collectables[] PROGMEM =
