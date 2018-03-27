@@ -50,7 +50,7 @@ void LevelSelectState::render(StateMachine & machine)
 	for(int8_t i = -2; i <= +2; ++i)
 	{
 		const int8_t index = this->index + i; // int8_t is cheaper than integer promotion
-		const uint8_t levelCount = ArrayLength(Levels); // Caching progmem
+		const uint8_t levelCount = ArrayLength(Levels); // Caching saves progmem
 		if(index >= 0 && static_cast<uint8_t>(index) < levelCount)
 		{
 			arduboy.setCursor(doubleMargin, centreY + (lineHeight * i));
