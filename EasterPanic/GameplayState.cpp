@@ -18,8 +18,6 @@ void GameplayState::activate(StateMachine & machine)
 
 void GameplayState::update(StateMachine & machine)
 {
-	auto arduboy = machine.getContext().arduboy;
-
 	// ToDo: break this out into its own StateMachine
 	switch(this->state)
 	{
@@ -67,9 +65,7 @@ void GameplayState::update(StateMachine & machine)
 
 void GameplayState::render(StateMachine & machine)
 {
-	auto arduboy = machine.getContext().arduboy;
-
-	renderPlayfield(machine);
+	this->renderPlayfield(machine);
 
 	// ToDo: break this out into its own StateMachine
 	switch(this->state)
@@ -577,11 +573,14 @@ void GameplayState::renderRunningActions(StateMachine & machine)
 {
 	constexpr const uint8_t x = CalculateCentreX(HalfScreenWidth, ScreenWidth, ActionIconWidth);
 	constexpr const uint8_t y = ScreenHeight - (ActionIconHeight + 2);
+	
 	if(this->nextAction > 0)
 	{
 		auto id = this->actions[this->nextAction - 1].getId();
 		Sprites::drawOverwrite(x, y, ActionIcons, static_cast<uint8_t>(id));
 	}
+	
+	(void)machine; // Remove warning
 }
 
 //
@@ -655,6 +654,8 @@ void GameplayState::renderEntity(StateMachine & machine)
 {
 	Sprites::drawOverwrite(player.x * 8, player.y * 8, SmallRabbitImages, static_cast<uint8_t>(player.direction));
 	//Sprites::drawExternalMask(player.x * 8, player.y * 8, SmallRabbitImages, SmallRabbitMasks, static_cast<uint8_t>(player.direction), static_cast<uint8_t>(player.direction));
+	
+	(void)machine; // Remove warning
 }
 
 void GameplayState::renderCollectables(StateMachine & machine)
@@ -664,6 +665,8 @@ void GameplayState::renderCollectables(StateMachine & machine)
 		Sprites::drawOverwrite(collectables[i].x * 8, collectables[i].y * 8, SmallCollectableImages, 0);
 		//Sprites::drawExternalMask(collectables[i].x * 8, collectables[i].y * 8, SmallCollectableImages, SmallCollectableMasks, 0, 0);
 	}
+	
+	(void)machine; // Remove warning
 }
 
 void GameplayState::renderPlayfield(StateMachine & machine)
