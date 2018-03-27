@@ -5,9 +5,9 @@
 class Entity
 {
 public:
-	uint8_t x;
-	uint8_t y;
-	Direction direction;
+	uint8_t x = 0;
+	uint8_t y = 0;
+	Direction direction = Direction::North;
 
 public:
 	constexpr Entity(void) = default;
