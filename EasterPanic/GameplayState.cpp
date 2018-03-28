@@ -647,7 +647,6 @@ void GameplayState::renderGrid(StateMachine & machine)
 		if(tile.isSolid())
 			arduboy.drawRect(x * 8, y * 8, SmallRabbitImageWidth, SmallRabbitImageHeight, Arduboy::ColourWhite);
 	}
-	arduboy.drawRect(0, 0, SmallRabbitImageWidth * TileGrid::Width, SmallRabbitImageHeight * TileGrid::Height, Arduboy::ColourWhite);
 }
 
 void GameplayState::renderEntity(StateMachine & machine)
