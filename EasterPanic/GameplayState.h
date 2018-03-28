@@ -79,6 +79,21 @@ private:
 	
 	const char * getErrorStringLine0(ErrorType type);
 	const char * getErrorStringLine1(ErrorType type);
+
+	class MenuOption
+	{
+	public:
+		StateType state;
+		uint8_t imageIndex;
+		const char * text;
+		
+	public:
+		MenuOption(void) = default;
+		constexpr MenuOption(const StateType & state, const uint8_t & imageIndex, const char * text)
+			: state(state), imageIndex(imageIndex), text(text)
+		{
+		}
+	};
 	
 private:
 	TileGrid tiles;
@@ -95,10 +110,8 @@ private:
 	StateType state;
 	ErrorType error;
 	
-	using Option = ListOption<StateType>;
-	uint8_t selectedOption;
-	
-	static const Option options[];	
+	uint8_t selectedOption;	
+	static const MenuOption menuOptions[];	
 
 public:
 	void activate(StateMachine & machine) override;

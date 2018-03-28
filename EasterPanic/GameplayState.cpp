@@ -218,11 +218,11 @@ void GameplayState::renderSuccess(StateMachine & machine)
 // State::Options
 //
 
-const typename GameplayState::Option GameplayState::options[] PROGMEM =
+const GameplayState::MenuOption GameplayState::menuOptions[] PROGMEM =
 {
-	Option(StateType::EditingActionList, StringEdit),
-	Option(StateType::RunningActions, StringRun),
-	Option(StateType::Quit, StringExit),
+	MenuOption(StateType::RunningActions, 1, StringRun),
+	MenuOption(StateType::EditingActionList, 2, StringEdit),
+	MenuOption(StateType::Quit, 0, StringExit),
 };
 
 void GameplayState::updateOptions(StateMachine & machine)
@@ -237,13 +237,13 @@ void GameplayState::updateOptions(StateMachine & machine)
 	
 	if (arduboy.justPressed(Arduboy::ButtonDown))
 	{
-		if(this->selectedOption < (ArrayLength(options) - 1))
+		if(this->selectedOption < (ArrayLength(menuOptions) - 1))
 			++this->selectedOption;
 	}
 	
 	if (arduboy.justPressed(Arduboy::ButtonA))
 	{
-		this->state = ProgmemRead<StateType>(&this->options[this->selectedOption].state);
+		this->state = ProgmemRead<StateType>(&this->menuOptions[this->selectedOption].state);
 		switch(this->state)
 		{
 			case StateType::EditingActionList:
@@ -269,19 +269,39 @@ void GameplayState::updateOptions(StateMachine & machine)
 void GameplayState::renderOptions(StateMachine & machine)
 {
 	auto arduboy = machine.getContext().arduboy;
-	
-	const auto x = HalfScreenWidth + 4 + (2 * FontCharWidth);
-	const auto yBase = 4;
-	
-	for(uint8_t i = 0; i < ArrayLength(options); ++i)
+
+	// Layout constants
+	constexpr const uint8_t singleMargin = 2;
+	constexpr const uint8_t doubleMargin = singleMargin * 2;
+	constexpr const uint8_t selectedIconHeight = MenuIconHeight + doubleMargin;
+	constexpr const uint8_t selectedIconWidth = MenuIconWidth + doubleMargin;
+	constexpr const uint8_t baseY = CalculateCentreY(MenuIconHeight);
+	constexpr const uint8_t baseX = HalfScreenWidth + doubleMargin;
+	constexpr const int8_t minOffset = -2;
+	constexpr const int8_t maxOffset = 2;
+			
+	// Draw level names, including previous two and next two
+	for(int8_t i = minOffset; i <= maxOffset; ++i)
 	{
-		auto y = yBase + (i * FontLineHeight);
-		arduboy.setCursor(x, y);
-		arduboy.print(FlashString(ProgmemRead<const char *>(&options[i].text)));
-		
-		if(this->selectedOption == i)
-			Sprites::drawOverwrite(x - (2 * FontCharWidth), y, SmallArrowImages, 1);
+		constexpr const size_t menuCount = ArrayLength(menuOptions);
+		const int8_t index = this->selectedOption + i; // int8_t is cheaper than integer promotion
+		if(index >= 0 && static_cast<uint8_t>(index) < menuCount)
+		{
+			const auto y = baseY + (selectedIconHeight * i);
+			
+			MenuOption option = ProgmemRead(&menuOptions[index]);	
+			Sprites::drawOverwrite(baseX, y, MenuIcons, option.imageIndex);
+			
+			constexpr const auto textX = baseX + selectedIconWidth;
+			const auto textY = y + CalculateCentre(MenuIconHeight, FontLineHeight);
+			
+			arduboy.setCursor(textX, textY);
+			arduboy.print(FlashString(option.text));
+		}
 	}
+		
+	// Draw selector
+	arduboy.drawRect(baseX - singleMargin, baseY - singleMargin, selectedIconWidth, selectedIconHeight, Arduboy::ColourWhite);
 }
 
 //
