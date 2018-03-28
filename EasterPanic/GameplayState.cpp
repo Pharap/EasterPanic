@@ -13,6 +13,7 @@ void GameplayState::activate(StateMachine & machine)
 	
 	this->loadLevel(selectedLevel);
 	
+	this->selectedOption = 1;
 	this->state = StateType::Options;
 }
 

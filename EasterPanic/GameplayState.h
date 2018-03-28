@@ -110,7 +110,7 @@ private:
 	StateType state;
 	ErrorType error;
 	
-	uint8_t selectedOption;	
+	uint8_t selectedOption = 1;	
 	static const MenuOption menuOptions[];	
 
 public:
