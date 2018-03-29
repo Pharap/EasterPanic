@@ -10,13 +10,13 @@ void LevelSelectState::update(StateMachine & machine)
 	
 	if(arduboy.justPressed(Arduboy::ButtonUp))
 	{
-		if(this->index > 0)
+		if(this->index > ArrayFirstIndex(Levels))
 			--this->index;
 	}
 	
 	if(arduboy.justPressed(Arduboy::ButtonDown))
 	{
-		if(this->index < ArrayLength(Levels) - 1)
+		if(this->index < ArrayLastIndex(Levels))
 			++this->index;	
 	}
 	
