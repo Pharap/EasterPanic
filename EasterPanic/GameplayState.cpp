@@ -232,13 +232,13 @@ void GameplayState::updateOptions(StateMachine & machine)
 
 	if (arduboy.justPressed(Arduboy::ButtonUp))
 	{
-		if(this->selectedOption > 0)
+		if(this->selectedOption > ArrayFirstIndex(menuOptions))
 			--this->selectedOption;
 	}
 	
 	if (arduboy.justPressed(Arduboy::ButtonDown))
 	{
-		if(this->selectedOption < (ArrayLength(menuOptions) - 1))
+		if(this->selectedOption < ArrayLastIndex(menuOptions))
 			++this->selectedOption;
 	}
 	
@@ -611,7 +611,7 @@ void GameplayState::renderRunningActions(StateMachine & machine)
 
 void GameplayState::loadLevel(uint8_t selectedLevel)
 {	
-	if(selectedLevel >= ArrayLength(Levels))
+	if(selectedLevel > ArrayLastIndex(Levels))
 	{
 		// Panic!!
 		return;
