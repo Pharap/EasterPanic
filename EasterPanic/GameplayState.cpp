@@ -672,7 +672,6 @@ void GameplayState::renderGrid(StateMachine & machine)
 void GameplayState::renderEntity(StateMachine & machine)
 {
 	Sprites::drawOverwrite(player.x * 8, player.y * 8, SmallRabbitImages, static_cast<uint8_t>(player.direction));
-	//Sprites::drawExternalMask(player.x * 8, player.y * 8, SmallRabbitImages, SmallRabbitMasks, static_cast<uint8_t>(player.direction), static_cast<uint8_t>(player.direction));
 	
 	(void)machine; // Remove warning
 }
@@ -682,7 +681,6 @@ void GameplayState::renderCollectables(StateMachine & machine)
 	for(uint8_t i = 0; i < collectables.getCount(); ++i)
 	{
 		Sprites::drawOverwrite(collectables[i].x * 8, collectables[i].y * 8, SmallCollectableImages, 0);
-		//Sprites::drawExternalMask(collectables[i].x * 8, collectables[i].y * 8, SmallCollectableImages, SmallCollectableMasks, 0, 0);
 	}
 	
 	(void)machine; // Remove warning
