@@ -10,9 +10,9 @@
 void GameplayState::activate(StateMachine & machine)
 {
 	auto selectedLevel = machine.getContext().selectedLevel;
-	
+
 	this->loadLevel(selectedLevel);
-	
+
 	this->selectedOption = 1;
 	this->state = StateType::Options;
 }
@@ -235,13 +235,13 @@ void GameplayState::updateOptions(StateMachine & machine)
 		if(this->selectedOption > ArrayFirstIndex(menuOptions))
 			--this->selectedOption;
 	}
-	
+
 	if (arduboy.justPressed(Arduboy::ButtonDown))
 	{
 		if(this->selectedOption < ArrayLastIndex(menuOptions))
 			++this->selectedOption;
 	}
-	
+
 	if (arduboy.justPressed(Arduboy::ButtonA))
 	{
 		this->state = ProgmemRead<StateType>(&this->menuOptions[this->selectedOption].state);
@@ -254,14 +254,14 @@ void GameplayState::updateOptions(StateMachine & machine)
 			case StateType::RunningActions:
 			{
 				this->nextAction = 0;
-				auto selectedLevel = machine.getContext().selectedLevel;	
+				auto selectedLevel = machine.getContext().selectedLevel;
 				this->loadLevel(selectedLevel);
 				break;
 			}
 			case StateType::Quit:
 			{
 				break;
-			}		
+			}
 			default: break;
 		}
 	}
@@ -280,7 +280,7 @@ void GameplayState::renderOptions(StateMachine & machine)
 	constexpr const uint8_t baseX = HalfScreenWidth + doubleMargin;
 	constexpr const int8_t minOffset = -2;
 	constexpr const int8_t maxOffset = 2;
-			
+
 	// Draw level names, including previous two and next two
 	for(int8_t i = minOffset; i <= maxOffset; ++i)
 	{
@@ -289,18 +289,18 @@ void GameplayState::renderOptions(StateMachine & machine)
 		if(index >= 0 && static_cast<uint8_t>(index) < menuCount)
 		{
 			const auto y = baseY + (selectedIconHeight * i);
-			
-			MenuOption option = ProgmemRead(&menuOptions[index]);	
+
+			MenuOption option = ProgmemRead(&menuOptions[index]);
 			Sprites::drawOverwrite(baseX, y, MenuIcons, option.imageIndex);
-			
+
 			constexpr const auto textX = baseX + selectedIconWidth;
 			const auto textY = y + CalculateCentre(MenuIconHeight, FontLineHeight);
-			
+
 			arduboy.setCursor(textX, textY);
 			arduboy.print(FlashString(option.text));
 		}
 	}
-		
+
 	// Draw selector
 	arduboy.drawRect(baseX - singleMargin, baseY - singleMargin, selectedIconWidth, selectedIconHeight, Arduboy::ColourWhite);
 }
@@ -312,24 +312,24 @@ void GameplayState::renderOptions(StateMachine & machine)
 void GameplayState::updateEditingActionList(StateMachine & machine)
 {
 	auto arduboy = machine.getContext().arduboy;
-	
+
 	if(arduboy.justPressed(Arduboy::ButtonLeft))
 	{
 		if(this->selectedAction > this->actions.getFirstIndex())
 			--this->selectedAction;
 	}
-	
+
 	if(arduboy.justPressed(Arduboy::ButtonRight))
 	{
 		if(this->selectedAction < this->actions.getLastIndex())
 			++this->selectedAction;
 	}
-	
+
 	if(arduboy.justPressed(Arduboy::ButtonA))
 	{
 		this->state = StateType::EditingCurrentAction;
 	}
-	
+
 	if(arduboy.justPressed(Arduboy::ButtonB))
 	{
 		this->state = StateType::Options;
@@ -339,25 +339,25 @@ void GameplayState::updateEditingActionList(StateMachine & machine)
 void GameplayState::renderEditingActionList(StateMachine & machine)
 {
 	auto arduboy = machine.getContext().arduboy;
-	
+
 	auto x = HalfScreenWidth + 4;
 	auto y = 2;
-	
+
 	for(uint8_t i = 0; i < this->actions.getCount(); ++i)
 	{
 		auto divi = i / 7;
 		auto modi = i % 7;
-		
+
 		auto drawX = x + (modi * 8);
 		auto drawY = y + (divi * 8);
-		
+
 		arduboy.drawRect(drawX, drawY, 8, 8, Arduboy::ColourWhite);
-		
+
 		auto colour = (this->actions[i].getId() != ActionId::None) ? Arduboy::ColourWhite : Arduboy::ColourBlack;
 		arduboy.fillRect(drawX + 2, drawY + 2, 4, 4, colour);
-		
+
 		if(i == this->selectedAction)
-			arduboy.drawRect(drawX - 2, drawY - 2, 12, 12, Arduboy::ColourWhite);	
+			arduboy.drawRect(drawX - 2, drawY - 2, 12, 12, Arduboy::ColourWhite);
 	}
 }
 
@@ -368,9 +368,9 @@ void GameplayState::renderEditingActionList(StateMachine & machine)
 void GameplayState::updateEditingCurrentAction(StateMachine & machine)
 {
 	auto arduboy = machine.getContext().arduboy;
-	
+
 	auto & action = this->actions[this->selectedAction];
-	
+
 	if(arduboy.justPressed(Arduboy::ButtonUp))
 	{
 		if(this->editingArgument)
@@ -381,7 +381,7 @@ void GameplayState::updateEditingCurrentAction(StateMachine & machine)
 		else
 			action.getId() = previousActionIdWrapped(action.getId());
 	}
-	
+
 	if(arduboy.justPressed(Arduboy::ButtonDown))
 	{
 		if(this->editingArgument)
@@ -392,18 +392,18 @@ void GameplayState::updateEditingCurrentAction(StateMachine & machine)
 		else
 			action.getId() = nextActionIdWrapped(action.getId());
 	}
-	
+
 	if(arduboy.justPressed(Arduboy::ButtonRight))
 	{
 		if(action.getId() == ActionId::ForStart)
 			this->editingArgument = true;
 	}
-	
+
 	if(arduboy.justPressed(Arduboy::ButtonLeft))
 	{
 		this->editingArgument = false;
 	}
-	
+
 	if(arduboy.justPressed(Arduboy::ButtonA))
 	{
 		this->state = StateType::EditingActionList;
@@ -413,25 +413,25 @@ void GameplayState::updateEditingCurrentAction(StateMachine & machine)
 void GameplayState::renderEditingCurrentAction(StateMachine & machine)
 {
 	auto arduboy = machine.getContext().arduboy;
-	{	
+	{
 		auto x = HalfScreenWidth + 4;
 		auto y = 2;
-		
+
 		for(uint8_t i = 0; i < this->actions.getCount(); ++i)
 		{
 			auto divi = i / 7;
 			auto modi = i % 7;
-			
+
 			auto drawX = x + (modi * 8);
 			auto drawY = y + (divi * 8);
-			
+
 			arduboy.drawRect(drawX, drawY, 8, 8, Arduboy::ColourWhite);
-			
+
 			auto colour = (this->actions[i].getId() != ActionId::None) ? Arduboy::ColourWhite : Arduboy::ColourBlack;
 			arduboy.fillRect(drawX + 2, drawY + 2, 4, 4, colour);
-			
+
 			if(i == this->selectedAction)
-				arduboy.drawRect(drawX - 2, drawY - 2, 12, 12, Arduboy::ColourWhite);	
+				arduboy.drawRect(drawX - 2, drawY - 2, 12, 12, Arduboy::ColourWhite);
 		}
 	}
 	{
@@ -443,8 +443,8 @@ void GameplayState::renderEditingCurrentAction(StateMachine & machine)
 		{
 			arduboy.setCursor(x + ActionIconWidth + 2, y + ((ActionIconHeight - FontLineHeight) / 2));
 			arduboy.print(action.getArgument());
-			
-			auto arrowX = this->editingArgument ? x + ActionIconWidth + 2 : x + 2;			
+
+			auto arrowX = this->editingArgument ? x + ActionIconWidth + 2 : x + 2;
 			Sprites::drawOverwrite(arrowX, y - SmallArrowImageHeight, SmallArrowImages, 2);
 		}
 	}
@@ -460,7 +460,7 @@ void GameplayState::updateRunningActions(StateMachine & machine)
 		return;
 
 	auto arduboy = machine.getContext().arduboy;
-	
+
 	if(arduboy.justPressed(Arduboy::ButtonB))
 	{
 		this->state = StateType::Options;
@@ -594,13 +594,13 @@ void GameplayState::renderRunningActions(StateMachine & machine)
 {
 	constexpr const uint8_t x = CalculateCentreX(HalfScreenWidth, ScreenWidth, ActionIconWidth);
 	constexpr const uint8_t y = ScreenHeight - (ActionIconHeight + 2);
-	
+
 	if(this->nextAction > 0)
 	{
 		auto id = this->actions[this->nextAction - 1].getId();
 		Sprites::drawOverwrite(x, y, ActionIcons, static_cast<uint8_t>(id));
 	}
-	
+
 	(void)machine; // Remove warning
 }
 
@@ -610,19 +610,19 @@ void GameplayState::renderRunningActions(StateMachine & machine)
 
 
 void GameplayState::loadLevel(uint8_t selectedLevel)
-{	
+{
 	if(selectedLevel > ArrayLastIndex(Levels))
 	{
 		// Panic!!
 		return;
 	}
-	
+
 	LevelData levelData = ProgmemRead(&Levels[selectedLevel]);
 
 	this->actions.resize(levelData.maxActions);
 	this->player = levelData.playerStart;
 	TileLoader<TileGrid::Width, TileGrid::Height>::LoadProgmem(this->tiles, levelData.tileData);
-	
+
 	this->collectables.clear();
 	auto count = levelData.collectableData.collectableCount;
 	for(uint8_t i = 0; i < count; ++i)
@@ -656,8 +656,8 @@ void GameplayState::checkForCollectableCollision(void)
 void GameplayState::renderGrid(StateMachine & machine)
 {
 	auto arduboy = machine.getContext().arduboy;
-	
-	const uint8_t tileWidth = SmallRabbitImageWidth;	
+
+	const uint8_t tileWidth = SmallRabbitImageWidth;
 	const uint8_t tileHeight = SmallRabbitImageHeight;
 
 	for(uint8_t y = 0; y < TileGrid::Height; ++y)
@@ -672,7 +672,7 @@ void GameplayState::renderGrid(StateMachine & machine)
 void GameplayState::renderEntity(StateMachine & machine)
 {
 	Sprites::drawOverwrite(player.x * 8, player.y * 8, SmallRabbitImages, static_cast<uint8_t>(player.direction));
-	
+
 	(void)machine; // Remove warning
 }
 
@@ -682,7 +682,7 @@ void GameplayState::renderCollectables(StateMachine & machine)
 	{
 		Sprites::drawOverwrite(collectables[i].x * 8, collectables[i].y * 8, SmallCollectableImages, 0);
 	}
-	
+
 	(void)machine; // Remove warning
 }
 
