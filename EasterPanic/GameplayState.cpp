@@ -313,16 +313,28 @@ void GameplayState::updateEditingActionList(StateMachine & machine)
 {
 	auto arduboy = machine.getContext().arduboy;
 
-	if(arduboy.justPressed(Arduboy::ButtonLeft))
+	if(arduboy.justPressed(Arduboy::ButtonUp))
 	{
 		if(this->selectedAction > this->actions.getFirstIndex())
 			--this->selectedAction;
 	}
 
-	if(arduboy.justPressed(Arduboy::ButtonRight))
+	if(arduboy.justPressed(Arduboy::ButtonDown))
 	{
 		if(this->selectedAction < this->actions.getLastIndex())
 			++this->selectedAction;
+	}
+	
+	auto & action = this->actions[this->selectedAction];
+	
+	if(arduboy.justPressed(Arduboy::ButtonRight))
+	{
+		action.getId() = nextActionIdWrapped(action.getId());
+	}
+	
+	if(arduboy.justPressed(Arduboy::ButtonLeft))
+	{
+		action.getId() = previousActionIdWrapped(action.getId());
 	}
 
 	if(arduboy.justPressed(Arduboy::ButtonA))
@@ -340,7 +352,7 @@ void GameplayState::renderEditingActionList(StateMachine & machine)
 {
 	auto arduboy = machine.getContext().arduboy;
 
-	auto x = HalfScreenWidth + 4;
+	/*auto x = HalfScreenWidth + 4;
 	auto y = 2;
 
 	for(uint8_t i = 0; i < this->actions.getCount(); ++i)
@@ -358,7 +370,77 @@ void GameplayState::renderEditingActionList(StateMachine & machine)
 
 		if(i == this->selectedAction)
 			arduboy.drawRect(drawX - 2, drawY - 2, 12, 12, Arduboy::ColourWhite);
+	}*/
+	
+
+	// Layout constants
+	constexpr const uint8_t singleMargin = 2;
+	constexpr const uint8_t doubleMargin = singleMargin * 2;		
+	constexpr const uint8_t selectedIconHeight = ActionIconHeight + doubleMargin;
+	constexpr const uint8_t selectedIconWidth = ActionIconWidth + doubleMargin;
+	constexpr const uint8_t centreY = CalculateCentreY(ActionIconHeight);
+	constexpr const uint8_t centreX = HalfScreenWidth + CalculateCentre(HalfScreenWidth, ActionIconWidth);
+	
+	{
+		constexpr const int8_t minOffset = -1;
+		constexpr const int8_t maxOffset = 1;
+				
+		auto & selectedAction = this->actions[this->selectedAction];
+		
+		// Draw action types, including previous two and next two
+		for(int8_t i = minOffset; i <= maxOffset; ++i)
+		{
+			const int8_t id = static_cast<uint8_t>(selectedAction.getId()) + i;
+			if(id >= static_cast<uint8_t>(ActionIdFirst) && id <= static_cast<uint8_t>(ActionIdLast))
+			{
+				const auto x = centreX + (selectedIconWidth * i);
+				const auto y = centreY;
+				
+				Sprites::drawOverwrite(x, y, ActionIcons, id);
+				
+				/*arduboy.setCursor(x + selectedIconWidth, y);
+				arduboy.print(index);
+				
+				if(action.getId() == ActionId::ForStart)
+				{
+					arduboy.setCursor(x + selectedIconWidth, y + FontLineHeight);
+					arduboy.print(action.getArgument());				
+				}*/
+			}
+		}
 	}
+	
+	{
+		constexpr const int8_t minOffset = -2;
+		constexpr const int8_t maxOffset = 2;
+				
+		// Draw action list, including previous two and next two
+		for(int8_t i = minOffset; i <= maxOffset; ++i)
+		{
+			const int8_t index = this->selectedAction + i; // int8_t is cheaper than integer promotion
+			if(index >= 0 && static_cast<uint8_t>(index) < this->actions.getCount())
+			{
+				const auto x = centreX;
+				const auto y = centreY + (selectedIconHeight * i);
+				
+				auto & action = this->actions[index];
+				Sprites::drawOverwrite(x, y, ActionIcons, static_cast<uint8_t>(action.getId()));
+				
+				arduboy.setCursor(x + selectedIconWidth, y);
+				arduboy.print(index);
+				
+				if(action.getId() == ActionId::ForStart)
+				{
+					arduboy.setCursor(x + selectedIconWidth, y + FontLineHeight);
+					arduboy.print(action.getArgument());				
+				}
+			}
+		}
+	}
+	
+	// Draw selector
+	arduboy.drawRect(centreX - singleMargin, centreY - singleMargin, selectedIconWidth, selectedIconHeight, Arduboy::ColourWhite);
+
 }
 
 //
@@ -379,7 +461,9 @@ void GameplayState::updateEditingCurrentAction(StateMachine & machine)
 				++action.getArgument();
 		}
 		else
+		{
 			action.getId() = previousActionIdWrapped(action.getId());
+		}
 	}
 
 	if(arduboy.justPressed(Arduboy::ButtonDown))
@@ -390,7 +474,9 @@ void GameplayState::updateEditingCurrentAction(StateMachine & machine)
 				--action.getArgument();
 		}
 		else
+		{
 			action.getId() = nextActionIdWrapped(action.getId());
+		}
 	}
 
 	if(arduboy.justPressed(Arduboy::ButtonRight))
