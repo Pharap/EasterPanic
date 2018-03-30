@@ -639,16 +639,12 @@ void GameplayState::reportError(ErrorType error)
 
 void GameplayState::checkForCollectableCollision(void)
 {
-	for(uint8_t i = this->collectables.getFirstIndex(); i < this->collectables.getCount();)
+	for(uint8_t i = this->collectables.getFirstIndex(); i < this->collectables.getCount(); ++i)
 	{
 		if(this->player.x == this->collectables[i].x && this->player.y == this->collectables[i].y)
 		{
 			this->collectables.removeAt(i);
 			break;
-		}
-		else
-		{
-			++i;
 		}
 	}
 }
