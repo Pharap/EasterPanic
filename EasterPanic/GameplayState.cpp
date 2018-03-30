@@ -656,13 +656,16 @@ void GameplayState::checkForCollectableCollision(void)
 void GameplayState::renderGrid(StateMachine & machine)
 {
 	auto arduboy = machine.getContext().arduboy;
+	
+	const uint8_t tileWidth = SmallRabbitImageWidth;	
+	const uint8_t tileHeight = SmallRabbitImageHeight;
 
 	for(uint8_t y = 0; y < TileGrid::Height; ++y)
 	for(uint8_t x = 0; x < TileGrid::Width; ++x)
 	{
-		auto tile = tiles.getItem(x, y);
+		const auto tile = tiles.getItem(x, y);
 		if(tile.isSolid())
-			arduboy.drawRect(x * 8, y * 8, SmallRabbitImageWidth, SmallRabbitImageHeight, Arduboy::ColourWhite);
+			arduboy.drawRect(x * tileWidth, y * tileHeight, tileWidth, tileHeight, Arduboy::ColourWhite);
 	}
 }
 
