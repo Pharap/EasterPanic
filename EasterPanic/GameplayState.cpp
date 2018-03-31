@@ -350,29 +350,6 @@ void GameplayState::updateEditingActionList(StateMachine & machine)
 
 void GameplayState::renderEditingActionList(StateMachine & machine)
 {
-	auto arduboy = machine.getContext().arduboy;
-
-	/*auto x = HalfScreenWidth + 4;
-	auto y = 2;
-
-	for(uint8_t i = 0; i < this->actions.getCount(); ++i)
-	{
-		auto divi = i / 7;
-		auto modi = i % 7;
-
-		auto drawX = x + (modi * 8);
-		auto drawY = y + (divi * 8);
-
-		arduboy.drawRect(drawX, drawY, 8, 8, Arduboy::ColourWhite);
-
-		auto colour = (this->actions[i].getId() != ActionId::None) ? Arduboy::ColourWhite : Arduboy::ColourBlack;
-		arduboy.fillRect(drawX + 2, drawY + 2, 4, 4, colour);
-
-		if(i == this->selectedAction)
-			arduboy.drawRect(drawX - 2, drawY - 2, 12, 12, Arduboy::ColourWhite);
-	}*/
-	
-
 	// Layout constants
 	constexpr const uint8_t singleMargin = 2;
 	constexpr const uint8_t doubleMargin = singleMargin * 2;		
@@ -381,35 +358,20 @@ void GameplayState::renderEditingActionList(StateMachine & machine)
 	constexpr const uint8_t centreY = CalculateCentreY(ActionIconHeight);
 	constexpr const uint8_t centreX = HalfScreenWidth + CalculateCentre(HalfScreenWidth, ActionIconWidth);
 	
-	{
-		constexpr const int8_t minOffset = -1;
-		constexpr const int8_t maxOffset = 1;
-				
+	auto arduboy = machine.getContext().arduboy;	
+	
+	// Draw the available actions
+	{				
 		auto & selectedAction = this->actions[this->selectedAction];
-		
-		// Draw action types, including previous two and next two
-		for(int8_t i = minOffset; i <= maxOffset; ++i)
-		{
-			const int8_t id = static_cast<uint8_t>(selectedAction.getId()) + i;
-			if(id >= static_cast<uint8_t>(ActionIdFirst) && id <= static_cast<uint8_t>(ActionIdLast))
-			{
-				const auto x = centreX + (selectedIconWidth * i);
-				const auto y = centreY;
+						
+		const ActionId idLeft = previousActionIdWrapped(selectedAction.getId());	
+		const ActionId idRight = nextActionIdWrapped(selectedAction.getId());	
 				
-				Sprites::drawOverwrite(x, y, ActionIcons, id);
-				
-				/*arduboy.setCursor(x + selectedIconWidth, y);
-				arduboy.print(index);
-				
-				if(action.getId() == ActionId::ForStart)
-				{
-					arduboy.setCursor(x + selectedIconWidth, y + FontLineHeight);
-					arduboy.print(action.getArgument());				
-				}*/
-			}
-		}
+		Sprites::drawOverwrite(centreX - selectedIconWidth, centreY, ActionIcons, static_cast<uint8_t>(idLeft));
+		Sprites::drawOverwrite(centreX + selectedIconWidth, centreY, ActionIcons, static_cast<uint8_t>(idRight));
 	}
 	
+	// Draw the action list
 	{
 		constexpr const int8_t minOffset = -2;
 		constexpr const int8_t maxOffset = 2;
@@ -438,7 +400,7 @@ void GameplayState::renderEditingActionList(StateMachine & machine)
 		}
 	}
 	
-	// Draw selector
+	// Draw the selector
 	arduboy.drawRect(centreX - singleMargin, centreY - singleMargin, selectedIconWidth, selectedIconHeight, Arduboy::ColourWhite);
 
 }
@@ -455,7 +417,9 @@ void GameplayState::updateEditingCurrentAction(StateMachine & machine)
 
 	if(arduboy.justPressed(Arduboy::ButtonUp))
 	{
-		if(this->editingArgument)
+		if(action.getArgument() < 255)
+			++action.getArgument();
+		/*if(this->editingArgument)
 		{
 			if(action.getArgument() < 255)
 				++action.getArgument();
@@ -463,12 +427,14 @@ void GameplayState::updateEditingCurrentAction(StateMachine & machine)
 		else
 		{
 			action.getId() = previousActionIdWrapped(action.getId());
-		}
+		}*/
 	}
 
 	if(arduboy.justPressed(Arduboy::ButtonDown))
 	{
-		if(this->editingArgument)
+		if(action.getArgument() > 0)
+			--action.getArgument();
+		/*if(this->editingArgument)
 		{
 			if(action.getArgument() > 0)
 				--action.getArgument();
@@ -476,19 +442,19 @@ void GameplayState::updateEditingCurrentAction(StateMachine & machine)
 		else
 		{
 			action.getId() = nextActionIdWrapped(action.getId());
-		}
+		}*/
 	}
 
-	if(arduboy.justPressed(Arduboy::ButtonRight))
+	/*if(arduboy.justPressed(Arduboy::ButtonRight))
 	{
 		if(action.getId() == ActionId::ForStart)
 			this->editingArgument = true;
-	}
+	}*/
 
-	if(arduboy.justPressed(Arduboy::ButtonLeft))
+	/*if(arduboy.justPressed(Arduboy::ButtonLeft))
 	{
 		this->editingArgument = false;
-	}
+	}*/
 
 	if(arduboy.justPressed(Arduboy::ButtonA))
 	{
@@ -498,7 +464,8 @@ void GameplayState::updateEditingCurrentAction(StateMachine & machine)
 
 void GameplayState::renderEditingCurrentAction(StateMachine & machine)
 {
-	auto arduboy = machine.getContext().arduboy;
+	this->renderEditingActionList(machine);
+	/*auto arduboy = machine.getContext().arduboy;
 	{
 		auto x = HalfScreenWidth + 4;
 		auto y = 2;
@@ -533,7 +500,7 @@ void GameplayState::renderEditingCurrentAction(StateMachine & machine)
 			auto arrowX = this->editingArgument ? x + ActionIconWidth + 2 : x + 2;
 			Sprites::drawOverwrite(arrowX, y - SmallArrowImageHeight, SmallArrowImages, 2);
 		}
-	}
+	}*/
 }
 
 //
@@ -678,7 +645,49 @@ void GameplayState::updateRunningActions(StateMachine & machine)
 
 void GameplayState::renderRunningActions(StateMachine & machine)
 {
-	constexpr const uint8_t x = CalculateCentreX(HalfScreenWidth, ScreenWidth, ActionIconWidth);
+	// Layout constants
+	constexpr const uint8_t singleMargin = 2;
+	constexpr const uint8_t doubleMargin = singleMargin * 2;		
+	constexpr const uint8_t selectedIconHeight = ActionIconHeight + doubleMargin;
+	constexpr const uint8_t selectedIconWidth = ActionIconWidth + doubleMargin;
+	constexpr const uint8_t centreY = CalculateCentreY(ActionIconHeight);
+	constexpr const uint8_t centreX = HalfScreenWidth + CalculateCentre(HalfScreenWidth, ActionIconWidth);
+	
+	auto arduboy = machine.getContext().arduboy;
+	
+	// Draw the action list
+	{
+		constexpr const int8_t minOffset = -2;
+		constexpr const int8_t maxOffset = 2;
+				
+		// Draw action list, including previous two and next two
+		for(int8_t i = minOffset; i <= maxOffset; ++i)
+		{
+			const int8_t index = this->nextAction + i; // int8_t is cheaper than integer promotion
+			if(index >= 0 && static_cast<uint8_t>(index) < this->actions.getCount())
+			{
+				const auto x = centreX;
+				const auto y = centreY + (selectedIconHeight * i);
+				
+				auto & action = this->actions[index];
+				Sprites::drawOverwrite(x, y, ActionIcons, static_cast<uint8_t>(action.getId()));
+				
+				arduboy.setCursor(x + selectedIconWidth, y);
+				arduboy.print(index);
+				
+				if(action.getId() == ActionId::ForStart)
+				{
+					arduboy.setCursor(x + selectedIconWidth, y + FontLineHeight);
+					arduboy.print(action.getArgument());				
+				}
+			}
+		}
+	}
+	
+	// Draw the selector
+	arduboy.drawRect(centreX - singleMargin, centreY - singleMargin, selectedIconWidth, selectedIconHeight, Arduboy::ColourWhite);
+
+	/*constexpr const uint8_t x = CalculateCentreX(HalfScreenWidth, ScreenWidth, ActionIconWidth);
 	constexpr const uint8_t y = ScreenHeight - (ActionIconHeight + 2);
 
 	if(this->nextAction > 0)
@@ -687,7 +696,7 @@ void GameplayState::renderRunningActions(StateMachine & machine)
 		Sprites::drawOverwrite(x, y, ActionIcons, static_cast<uint8_t>(id));
 	}
 
-	(void)machine; // Remove warning
+	(void)machine; // Remove warning*/
 }
 
 //
