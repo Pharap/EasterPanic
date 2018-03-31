@@ -230,13 +230,13 @@ void GameplayState::updateOptions(StateMachine & machine)
 {
 	auto arduboy = machine.getContext().arduboy;
 
-	if (arduboy.justPressed(Arduboy::ButtonUp))
+	if (arduboy.justPressed(Arduboy::ButtonLeft))
 	{
 		if(this->selectedOption > ArrayFirstIndex(menuOptions))
 			--this->selectedOption;
 	}
 
-	if (arduboy.justPressed(Arduboy::ButtonDown))
+	if (arduboy.justPressed(Arduboy::ButtonRight))
 	{
 		if(this->selectedOption < ArrayLastIndex(menuOptions))
 			++this->selectedOption;
@@ -276,13 +276,13 @@ void GameplayState::renderOptions(StateMachine & machine)
 	constexpr const uint8_t doubleMargin = singleMargin * 2;
 	constexpr const uint8_t selectedIconHeight = MenuIconHeight + doubleMargin;
 	constexpr const uint8_t selectedIconWidth = MenuIconWidth + doubleMargin;
-	constexpr const uint8_t baseY = CalculateCentreY(MenuIconHeight);
-	constexpr const uint8_t baseX = HalfScreenWidth + doubleMargin;
-	constexpr const int8_t minOffset = -2;
-	constexpr const int8_t maxOffset = 2;
+	constexpr const uint8_t centreY = CalculateCentreY(ActionIconHeight);
+	constexpr const uint8_t centreX = HalfScreenWidth + CalculateCentre(HalfScreenWidth, ActionIconWidth);
+	constexpr const int8_t minOffset = -1;
+	constexpr const int8_t maxOffset = 1;
 
-	// Draw level names, including previous two and next two
-	for(int8_t i = minOffset; i <= maxOffset; ++i)
+	// Draw option names, including previous two and next two
+	/*for(int8_t i = minOffset; i <= maxOffset; ++i)
 	{
 		constexpr const size_t menuCount = ArrayLength(menuOptions);
 		const int8_t index = this->selectedOption + i; // int8_t is cheaper than integer promotion
@@ -299,10 +299,41 @@ void GameplayState::renderOptions(StateMachine & machine)
 			arduboy.setCursor(textX, textY);
 			arduboy.print(FlashString(option.text));
 		}
+	}*/
+
+	// Draw option names, including previous two and next two
+	for(int8_t i = minOffset; i <= maxOffset; ++i)
+	{
+		constexpr const size_t menuCount = ArrayLength(menuOptions);
+		const int8_t index = this->selectedOption + i; // int8_t is cheaper than integer promotion
+		if(index >= 0 && static_cast<uint8_t>(index) < menuCount)
+		{
+			const auto x = centreX + (selectedIconWidth * i);
+			const auto y = centreY;
+
+			MenuOption option = ProgmemRead(&menuOptions[index]);
+			Sprites::drawOverwrite(x, y, MenuIcons, option.imageIndex);
+
+			if(i == 0)
+			{
+				const auto textX = x;
+				const auto textY = y + MenuIconHeight + doubleMargin;
+
+				arduboy.setCursor(textX, textY);
+				arduboy.print(FlashString(option.text));
+			}
+		}
 	}
 
 	// Draw selector
-	arduboy.drawRect(baseX - singleMargin, baseY - singleMargin, selectedIconWidth, selectedIconHeight, Arduboy::ColourWhite);
+	arduboy.drawRect(centreX - singleMargin, centreY - singleMargin, selectedIconWidth, selectedIconHeight, Arduboy::ColourWhite);
+	
+	// Draw level name
+	constexpr const auto stringWidth = StringWidth(StringLevelHeading) + (3 * FontCharWidth);
+	constexpr const auto levelX = HalfScreenWidth + CalculateCentre(HalfScreenWidth, stringWidth);
+	arduboy.setCursor(levelX, 0);
+	arduboy.print(FlashString(StringLevelHeading));
+	arduboy.print(machine.getContext().selectedLevel);
 }
 
 //
