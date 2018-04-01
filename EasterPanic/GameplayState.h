@@ -111,7 +111,7 @@ private:
 	ErrorType error;
 	
 	uint8_t selectedOption = 1;	
-	static const MenuOption menuOptions[];	
+	static const MenuOption menuOptions[];
 
 public:
 	void activate(StateMachine & machine) override;

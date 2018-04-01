@@ -73,4 +73,7 @@ void TitleScreenState::render(StateMachine & machine)
 			Sprites::drawOverwrite(x - (2 * FontCharWidth), y, SmallArrowImages, 1);
 		}
 	}
+	
+	// Draw 'By Pharap'
+	//Sprites::drawOverwrite(0, Arduboy::ScreenHeight - CreditImageHeight, CreditImage, 0);
 }

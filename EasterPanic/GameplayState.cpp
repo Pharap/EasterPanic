@@ -234,12 +234,16 @@ void GameplayState::updateOptions(StateMachine & machine)
 	{
 		if(this->selectedOption > ArrayFirstIndex(menuOptions))
 			--this->selectedOption;
+		else
+			this->selectedOption = ArrayLastIndex(menuOptions);
 	}
 
 	if (arduboy.justPressed(Arduboy::ButtonRight))
 	{
 		if(this->selectedOption < ArrayLastIndex(menuOptions))
 			++this->selectedOption;
+		else
+			this->selectedOption = ArrayFirstIndex(menuOptions);
 	}
 
 	if (arduboy.justPressed(Arduboy::ButtonA))
@@ -318,8 +322,8 @@ void GameplayState::renderOptions(StateMachine & machine)
 	// Draw level name
 	const auto selectedLevel = machine.getContext().selectedLevel;
 	const auto digits = (selectedLevel > 100) ? 3 : (selectedLevel > 10) ? 2 : 1;
-	constexpr const auto stringWidth = StringWidth(StringLevelHeading) + (digits * FontCharWidth);
-	constexpr const auto levelX = HalfScreenWidth + CalculateCentre(HalfScreenWidth, stringWidth);
+	const auto stringWidth = StringWidth(StringLevelHeading) + (digits * FontCharWidth);
+	const auto levelX = HalfScreenWidth + CalculateCentre(HalfScreenWidth, stringWidth);
 	arduboy.setCursor(levelX, singleMargin);
 	arduboy.print(FlashString(StringLevelHeading));
 	arduboy.print(machine.getContext().selectedLevel);
@@ -338,20 +342,30 @@ void GameplayState::renderOptions(StateMachine & machine)
 void GameplayState::updateEditingActionList(StateMachine & machine)
 {
 	auto arduboy = machine.getContext().arduboy;
+	
+	auto & action = this->actions[this->selectedAction];
 
 	if(arduboy.justPressed(Arduboy::ButtonUp))
 	{
-		if(this->selectedAction > this->actions.getFirstIndex())
+		if(this->editingArgument)
+		{		
+			if(action.getArgument() < 255)
+				++action.getArgument();
+		}
+		else if(this->selectedAction > this->actions.getFirstIndex())
 			--this->selectedAction;
 	}
 
 	if(arduboy.justPressed(Arduboy::ButtonDown))
 	{
-		if(this->selectedAction < this->actions.getLastIndex())
+		if(this->editingArgument)
+		{
+			if(action.getArgument() > 0)
+				--action.getArgument();
+		}
+		else if(this->selectedAction < this->actions.getLastIndex())
 			++this->selectedAction;
 	}
-	
-	auto & action = this->actions[this->selectedAction];
 	
 	if(arduboy.justPressed(Arduboy::ButtonRight))
 	{
@@ -365,12 +379,22 @@ void GameplayState::updateEditingActionList(StateMachine & machine)
 
 	if(arduboy.justPressed(Arduboy::ButtonA))
 	{
-		this->state = StateType::EditingCurrentAction;
+		if(!this->editingArgument)
+		{
+			if(action.getId() == ActionId::ForStart)
+				this->editingArgument = true;
+		}
+		else
+			this->editingArgument = false;
+			//this->state = StateType::EditingCurrentAction;
 	}
 
 	if(arduboy.justPressed(Arduboy::ButtonB))
 	{
-		this->state = StateType::Options;
+		if(!this->editingArgument)
+			this->state = StateType::Options;
+		else
+			this->editingArgument = false;
 	}
 }
 
@@ -414,7 +438,7 @@ void GameplayState::renderEditingActionList(StateMachine & machine)
 				auto & action = this->actions[index];
 				Sprites::drawOverwrite(x, y, ActionIcons, static_cast<uint8_t>(action.getId()));
 				
-				const auto indexX = x - (doubleMargin + FontCharWidth);
+				const auto indexX = x + selectedIconWidth + singleMargin;
 				arduboy.setCursor(indexX, y);
 				arduboy.print(index);
 				
@@ -430,6 +454,11 @@ void GameplayState::renderEditingActionList(StateMachine & machine)
 	// Draw the selector
 	arduboy.drawRect(centreX - singleMargin, centreY - singleMargin, selectedIconWidth, selectedIconHeight, Arduboy::ColourWhite);
 
+	if(this->editingArgument)
+	{
+		arduboy.setCursor(0, 0);
+		arduboy.print(F("You're editing a\nfucking for loop!!!"));
+	}
 }
 
 //
@@ -484,6 +513,11 @@ void GameplayState::updateEditingCurrentAction(StateMachine & machine)
 	}*/
 
 	if(arduboy.justPressed(Arduboy::ButtonA))
+	{
+		this->state = StateType::EditingActionList;
+	}
+
+	if(arduboy.justPressed(Arduboy::ButtonB))
 	{
 		this->state = StateType::EditingActionList;
 	}

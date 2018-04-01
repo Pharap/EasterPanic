@@ -36,6 +36,14 @@ constexpr inline ActionId previousActionIdClamped(ActionId actionId)
 	return (actionId != ActionIdFirst) ? static_cast<ActionId>(static_cast<uint8_t>(actionId) - 1) : actionId;
 }
 
+/*constexpr inline ActionId offsetActionIdWrapped(ActionId actionId, int8_t offset)
+{
+	return (offset < 0) ?
+		 :
+		static_cast<ActionId>((static_cast<uint8_t>(actionId) + static_cast<uint8_t>(offset)) % ActionIdCount);
+	return (actionId != ActionIdLast) ? static_cast<ActionId>(static_cast<uint8_t>(actionId) + 1) : ActionIdFirst;
+}*/
+
 /*inline ActionId & operator++(ActionId & actionId)
 {
 	actionId = nextActionIdWrapped(actionId);
