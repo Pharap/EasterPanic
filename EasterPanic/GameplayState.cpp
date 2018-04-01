@@ -110,6 +110,10 @@ void GameplayState::render(StateMachine & machine)
 			break;
 		}
 	}
+	
+	auto arduboy = machine.getContext().arduboy;
+	arduboy.drawRect(0, 0, HalfScreenWidth, ScreenHeight, Arduboy::ColourWhite);
+	arduboy.drawRect(HalfScreenWidth, 0, HalfScreenWidth, ScreenHeight, Arduboy::ColourWhite);
 }
 
 //
@@ -319,8 +323,9 @@ void GameplayState::renderOptions(StateMachine & machine)
 				const auto textX = x;
 				const auto textY = y + MenuIconHeight + doubleMargin;
 
-				arduboy.setCursor(textX, textY);
+				arduboy.setCursor(HalfScreenWidth + singleMargin, ScreenHeight - (FontLineHeight + singleMargin));
 				arduboy.print(FlashString(option.text));
+				arduboy.drawRect(HalfScreenWidth, ScreenHeight - (FontLineHeight + doubleMargin), HalfScreenWidth, FontLineHeight + doubleMargin, Arduboy::ColourWhite);
 			}
 		}
 	}
@@ -331,9 +336,13 @@ void GameplayState::renderOptions(StateMachine & machine)
 	// Draw level name
 	constexpr const auto stringWidth = StringWidth(StringLevelHeading) + (3 * FontCharWidth);
 	constexpr const auto levelX = HalfScreenWidth + CalculateCentre(HalfScreenWidth, stringWidth);
-	arduboy.setCursor(levelX, 0);
+	arduboy.setCursor(levelX, singleMargin);
 	arduboy.print(FlashString(StringLevelHeading));
 	arduboy.print(machine.getContext().selectedLevel);
+	arduboy.drawRect(HalfScreenWidth, 0, HalfScreenWidth, FontLineHeight + doubleMargin, Arduboy::ColourWhite);
+	
+	// Draw border
+	//arduboy.drawRect(HalfScreenWidth, 0, HalfScreenWidth, ScreenHeight, Arduboy::ColourWhite);
 }
 
 //
@@ -419,12 +428,13 @@ void GameplayState::renderEditingActionList(StateMachine & machine)
 				auto & action = this->actions[index];
 				Sprites::drawOverwrite(x, y, ActionIcons, static_cast<uint8_t>(action.getId()));
 				
-				arduboy.setCursor(x + selectedIconWidth, y);
+				const auto indexX = x - (doubleMargin + FontCharWidth);
+				arduboy.setCursor(indexX, y);
 				arduboy.print(index);
 				
 				if(action.getId() == ActionId::ForStart)
 				{
-					arduboy.setCursor(x + selectedIconWidth, y + FontLineHeight);
+					arduboy.setCursor(x + ActionIconWidth - FontCharWidth, y + ActionIconHeight - FontLineHeight);
 					arduboy.print(action.getArgument());				
 				}
 			}
@@ -496,42 +506,6 @@ void GameplayState::updateEditingCurrentAction(StateMachine & machine)
 void GameplayState::renderEditingCurrentAction(StateMachine & machine)
 {
 	this->renderEditingActionList(machine);
-	/*auto arduboy = machine.getContext().arduboy;
-	{
-		auto x = HalfScreenWidth + 4;
-		auto y = 2;
-
-		for(uint8_t i = 0; i < this->actions.getCount(); ++i)
-		{
-			auto divi = i / 7;
-			auto modi = i % 7;
-
-			auto drawX = x + (modi * 8);
-			auto drawY = y + (divi * 8);
-
-			arduboy.drawRect(drawX, drawY, 8, 8, Arduboy::ColourWhite);
-
-			auto colour = (this->actions[i].getId() != ActionId::None) ? Arduboy::ColourWhite : Arduboy::ColourBlack;
-			arduboy.fillRect(drawX + 2, drawY + 2, 4, 4, colour);
-
-			if(i == this->selectedAction)
-				arduboy.drawRect(drawX - 2, drawY - 2, 12, 12, Arduboy::ColourWhite);
-		}
-	}
-	{
-		constexpr const uint8_t x = CalculateCentreX(HalfScreenWidth, ScreenWidth, ActionIconWidth);
-		constexpr const uint8_t y = ScreenHeight - (ActionIconHeight + 2);
-		auto & action = this->actions[this->selectedAction];
-		Sprites::drawOverwrite(x, y, ActionIcons, static_cast<uint8_t>(action.getId()));
-		if(action.getId() == ActionId::ForStart)
-		{
-			arduboy.setCursor(x + ActionIconWidth + 2, y + ((ActionIconHeight - FontLineHeight) / 2));
-			arduboy.print(action.getArgument());
-
-			auto arrowX = this->editingArgument ? x + ActionIconWidth + 2 : x + 2;
-			Sprites::drawOverwrite(arrowX, y - SmallArrowImageHeight, SmallArrowImages, 2);
-		}
-	}*/
 }
 
 //
