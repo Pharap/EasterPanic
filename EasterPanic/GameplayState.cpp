@@ -110,10 +110,6 @@ void GameplayState::render(StateMachine & machine)
 			break;
 		}
 	}
-	
-	auto arduboy = machine.getContext().arduboy;
-	arduboy.drawRect(0, 0, HalfScreenWidth, ScreenHeight, Arduboy::ColourWhite);
-	arduboy.drawRect(HalfScreenWidth, 0, HalfScreenWidth, ScreenHeight, Arduboy::ColourWhite);
 }
 
 //
@@ -285,64 +281,54 @@ void GameplayState::renderOptions(StateMachine & machine)
 	constexpr const int8_t minOffset = -1;
 	constexpr const int8_t maxOffset = 1;
 
-	// Draw option names, including previous two and next two
-	/*for(int8_t i = minOffset; i <= maxOffset; ++i)
-	{
-		constexpr const size_t menuCount = ArrayLength(menuOptions);
-		const int8_t index = this->selectedOption + i; // int8_t is cheaper than integer promotion
-		if(index >= 0 && static_cast<uint8_t>(index) < menuCount)
-		{
-			const auto y = baseY + (selectedIconHeight * i);
-
-			MenuOption option = ProgmemRead(&menuOptions[index]);
-			Sprites::drawOverwrite(baseX, y, MenuIcons, option.imageIndex);
-
-			constexpr const auto textX = baseX + selectedIconWidth;
-			const auto textY = y + CalculateCentre(MenuIconHeight, FontLineHeight);
-
-			arduboy.setCursor(textX, textY);
-			arduboy.print(FlashString(option.text));
-		}
-	}*/
-
-	// Draw option names, including previous two and next two
+	// Draw options
 	for(int8_t i = minOffset; i <= maxOffset; ++i)
 	{
 		constexpr const size_t menuCount = ArrayLength(menuOptions);
-		const int8_t index = this->selectedOption + i; // int8_t is cheaper than integer promotion
-		if(index >= 0 && static_cast<uint8_t>(index) < menuCount)
+		int8_t index = this->selectedOption + i; // int8_t is cheaper than integer promotion
+		if(index < 0) index = menuCount + index;
+		if(index >= menuCount) index %= menuCount;
+		
+		//if(index >= 0 && static_cast<uint8_t>(index) < menuCount)
 		{
 			const auto x = centreX + (selectedIconWidth * i);
 			const auto y = centreY;
 
 			MenuOption option = ProgmemRead(&menuOptions[index]);
 			Sprites::drawOverwrite(x, y, MenuIcons, option.imageIndex);
-
-			if(i == 0)
-			{
-				const auto textX = x;
-				const auto textY = y + MenuIconHeight + doubleMargin;
-
-				arduboy.setCursor(HalfScreenWidth + singleMargin, ScreenHeight - (FontLineHeight + singleMargin));
-				arduboy.print(FlashString(option.text));
-				arduboy.drawRect(HalfScreenWidth, ScreenHeight - (FontLineHeight + doubleMargin), HalfScreenWidth, FontLineHeight + doubleMargin, Arduboy::ColourWhite);
-			}
 		}
 	}
 
 	// Draw selector
 	arduboy.drawRect(centreX - singleMargin, centreY - singleMargin, selectedIconWidth, selectedIconHeight, Arduboy::ColourWhite);
+
+	// Draw name of selected option
+	const auto selectedOptionText = ProgmemRead(&menuOptions[this->selectedOption].text);
+	const auto optionWidth = ProgmemStringWidth(selectedOptionText);
+	const auto textX = HalfScreenWidth + CalculateCentre(HalfScreenWidth, optionWidth);
+	const auto textY = ScreenHeight - (FontLineHeight + singleMargin);
+		
+	arduboy.setCursor(textX, textY);
+		
+	arduboy.print(FlashString(selectedOptionText));
+	
+	// Draw box around name
+	arduboy.drawRect(HalfScreenWidth, ScreenHeight - (FontLineHeight + doubleMargin), HalfScreenWidth, FontLineHeight + doubleMargin, Arduboy::ColourWhite);
 	
 	// Draw level name
-	constexpr const auto stringWidth = StringWidth(StringLevelHeading) + (3 * FontCharWidth);
+	const auto selectedLevel = machine.getContext().selectedLevel;
+	const auto digits = (selectedLevel > 100) ? 3 : (selectedLevel > 10) ? 2 : 1;
+	constexpr const auto stringWidth = StringWidth(StringLevelHeading) + (digits * FontCharWidth);
 	constexpr const auto levelX = HalfScreenWidth + CalculateCentre(HalfScreenWidth, stringWidth);
 	arduboy.setCursor(levelX, singleMargin);
 	arduboy.print(FlashString(StringLevelHeading));
 	arduboy.print(machine.getContext().selectedLevel);
+	
+	// Draw box around level name
 	arduboy.drawRect(HalfScreenWidth, 0, HalfScreenWidth, FontLineHeight + doubleMargin, Arduboy::ColourWhite);
 	
 	// Draw border
-	//arduboy.drawRect(HalfScreenWidth, 0, HalfScreenWidth, ScreenHeight, Arduboy::ColourWhite);
+	arduboy.drawRect(HalfScreenWidth, 0, HalfScreenWidth, ScreenHeight, Arduboy::ColourWhite);
 }
 
 //

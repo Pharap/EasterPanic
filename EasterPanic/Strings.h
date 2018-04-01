@@ -12,7 +12,7 @@ char const StringStats[] PROGMEM = "Stats";
 // Level select strings
 //
 
-char const StringLevelHeading[] PROGMEM = "Level: ";
+char const StringLevelHeading[] PROGMEM = "Level ";
 
 //
 // Gamplay other strings
