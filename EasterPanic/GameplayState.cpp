@@ -423,8 +423,8 @@ void GameplayState::renderEditingActionList(StateMachine & machine)
 	
 	// Draw the action list
 	{
-		constexpr const int8_t minOffset = -2;
-		constexpr const int8_t maxOffset = 2;
+		constexpr const int8_t minOffset = -1;
+		constexpr const int8_t maxOffset = 1;
 				
 		// Draw action list, including previous two and next two
 		for(int8_t i = minOffset; i <= maxOffset; ++i)
@@ -435,17 +435,25 @@ void GameplayState::renderEditingActionList(StateMachine & machine)
 				const auto x = centreX;
 				const auto y = centreY + (selectedIconHeight * i);
 				
-				auto & action = this->actions[index];
-				Sprites::drawOverwrite(x, y, ActionIcons, static_cast<uint8_t>(action.getId()));
-				
 				const auto indexX = x + selectedIconWidth + singleMargin;
-				arduboy.setCursor(indexX, y);
+				const auto indexY = y + ActionIconHeight - FontLineHeight;
+				
+				// Print index
+				arduboy.setCursor(indexX, indexY);
 				arduboy.print(index);
 				
-				if(action.getId() == ActionId::ForStart)
+				// Draw icon
+				auto & action = this->actions[index];
+				if(action.getId() != ActionId::ForStart)
 				{
-					arduboy.setCursor(x + ActionIconWidth - FontCharWidth, y + ActionIconHeight - FontLineHeight);
-					arduboy.print(action.getArgument());				
+					Sprites::drawOverwrite(x, y, ActionIcons, static_cast<uint8_t>(action.getId()));
+				}
+				else
+				{
+					// Handle for specially (god help me)
+					Sprites::drawOverwrite(x, y, ForIcon, 0);
+					arduboy.setCursor(centreX, indexY);
+					arduboy.print(action.getArgument());	
 				}
 			}
 		}
@@ -457,7 +465,7 @@ void GameplayState::renderEditingActionList(StateMachine & machine)
 	if(this->editingArgument)
 	{
 		arduboy.setCursor(0, 0);
-		arduboy.print(F("You're editing a\nfucking for loop!!!"));
+		arduboy.print(F("You're editing a\nfor loop!!!"));
 	}
 }
 
@@ -475,42 +483,13 @@ void GameplayState::updateEditingCurrentAction(StateMachine & machine)
 	{
 		if(action.getArgument() < 255)
 			++action.getArgument();
-		/*if(this->editingArgument)
-		{
-			if(action.getArgument() < 255)
-				++action.getArgument();
-		}
-		else
-		{
-			action.getId() = previousActionIdWrapped(action.getId());
-		}*/
 	}
 
 	if(arduboy.justPressed(Arduboy::ButtonDown))
 	{
 		if(action.getArgument() > 0)
 			--action.getArgument();
-		/*if(this->editingArgument)
-		{
-			if(action.getArgument() > 0)
-				--action.getArgument();
-		}
-		else
-		{
-			action.getId() = nextActionIdWrapped(action.getId());
-		}*/
 	}
-
-	/*if(arduboy.justPressed(Arduboy::ButtonRight))
-	{
-		if(action.getId() == ActionId::ForStart)
-			this->editingArgument = true;
-	}*/
-
-	/*if(arduboy.justPressed(Arduboy::ButtonLeft))
-	{
-		this->editingArgument = false;
-	}*/
 
 	if(arduboy.justPressed(Arduboy::ButtonA))
 	{
