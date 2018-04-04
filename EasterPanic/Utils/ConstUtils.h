@@ -12,12 +12,13 @@ namespace Details
 	};
 
 	template< typename T, T A, T B>
-	struct MaxValueHelper<T, A, B> : MaxValueHelper<T, (A > B) ? A : B>
+	struct MaxValueHelper<T, A, B>
 	{
+		constexpr const static T Value = (A > B) ? A : B;
 	};
 
 	template< typename T, T A, T B, T ... Ts>
-	struct MaxValueHelper<T, A, B, Ts...> : MaxValueHelper<T, MaxValueHelper<T, A, B>::Value, Ts...>
+	struct MaxValueHelper<T, A, B, Ts...> : MaxValueHelper<T, ((A > B) ? A : B), Ts...>
 	{
 	};
 }
@@ -40,12 +41,13 @@ namespace Details
 	};
 
 	template< typename T, T A, T B>
-	struct MinValueHelper<T, A, B> : MinValueHelper<T, (A < B) ? A : B>
+	struct MinValueHelper<T, A, B>
 	{
+		constexpr const static T Value = (A < B) ? A : B;
 	};
 
 	template< typename T, T A, T B, T ... Ts>
-	struct MinValueHelper<T, A, B, Ts...> : MinValueHelper<T, MinValueHelper<T, A, B>::Value, Ts...>
+	struct MinValueHelper<T, A, B, Ts...> : MinValueHelper<T, ((A < B) ? A : B), Ts...>
 	{
 	};
 }

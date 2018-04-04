@@ -4,3 +4,6 @@
 #include "ScreenUtils.h"
 #include "FontUtils.h"
 #include "Arduboy2PrettificationUtils.h"
+#include "Type.h"
+#include "Digits.h"
+#include "StaticRange.h"
