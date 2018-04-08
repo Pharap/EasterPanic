@@ -228,81 +228,102 @@ const GameplayState::MenuOption GameplayState::menuOptions[] PROGMEM =
 
 void GameplayState::updateOptions(StateMachine & machine)
 {
-	auto arduboy = machine.getContext().arduboy;
+	auto & arduboy = machine.getContext().arduboy;
 
-	if (arduboy.justPressed(Arduboy::ButtonUp))
+	using MenuOptionRange = StaticRange<uint8_t, ArrayFirstIndex(menuOptions), ArrayLastIndex(menuOptions)>;
+	
+	if (arduboy.justPressed(Arduboy::ButtonLeft))
 	{
-		if(this->selectedOption > ArrayFirstIndex(menuOptions))
-			--this->selectedOption;
+		this->selectedOption = MenuOptionRange::wrappedPrevious(this->selectedOption);
 	}
 
-	if (arduboy.justPressed(Arduboy::ButtonDown))
+	if (arduboy.justPressed(Arduboy::ButtonRight))
 	{
-		if(this->selectedOption < ArrayLastIndex(menuOptions))
-			++this->selectedOption;
+		this->selectedOption = MenuOptionRange::wrappedNext(this->selectedOption);
 	}
 
 	if (arduboy.justPressed(Arduboy::ButtonA))
 	{
 		this->state = ProgmemRead<StateType>(&this->menuOptions[this->selectedOption].state);
-		switch(this->state)
+		if(this->state == StateType::RunningActions)
 		{
-			case StateType::EditingActionList:
-			{
-				break;
-			}
-			case StateType::RunningActions:
-			{
-				this->nextAction = 0;
-				auto selectedLevel = machine.getContext().selectedLevel;
-				this->loadLevel(selectedLevel);
-				break;
-			}
-			case StateType::Quit:
-			{
-				break;
-			}
-			default: break;
+			this->nextAction = 0;
+			const auto selectedLevel = machine.getContext().selectedLevel;
+			this->loadLevel(selectedLevel);
 		}
 	}
 }
 
 void GameplayState::renderOptions(StateMachine & machine)
 {
-	auto arduboy = machine.getContext().arduboy;
-
 	// Layout constants
 	constexpr const uint8_t singleMargin = 2;
 	constexpr const uint8_t doubleMargin = singleMargin * 2;
-	constexpr const uint8_t selectedIconHeight = MenuIconHeight + doubleMargin;
+	
 	constexpr const uint8_t selectedIconWidth = MenuIconWidth + doubleMargin;
-	constexpr const uint8_t baseY = CalculateCentreY(MenuIconHeight);
-	constexpr const uint8_t baseX = HalfScreenWidth + doubleMargin;
-	constexpr const int8_t minOffset = -2;
-	constexpr const int8_t maxOffset = 2;
+	constexpr const uint8_t selectedIconHeight = MenuIconHeight + doubleMargin;
+	
+	constexpr const uint8_t centreX = HalfScreenWidth + CalculateCentre(HalfScreenWidth, ActionIconWidth);
+	constexpr const uint8_t centreY = CalculateCentreY(ActionIconHeight);
 
-	// Draw level names, including previous two and next two
-	for(int8_t i = minOffset; i <= maxOffset; ++i)
+	// Draw options	
 	{
-		constexpr const size_t menuCount = ArrayLength(menuOptions);
-		const int8_t index = this->selectedOption + i; // int8_t is cheaper than integer promotion
-		if(index >= 0 && static_cast<uint8_t>(index) < menuCount)
-		{
-			const auto y = baseY + (selectedIconHeight * i);
+		using MenuOptionRange = StaticRange<uint8_t, ArrayFirstIndex(menuOptions), ArrayLastIndex(menuOptions)>;
+		
+		const auto index1 = MenuOptionRange::wrappedNext(this->selectedOption);
+		const auto index2 = MenuOptionRange::wrappedPrevious(this->selectedOption);
+		
+		const auto optionImageIndex1 = ProgmemRead(&menuOptions[index1].imageIndex);
+		const auto optionImageIndex2 = ProgmemRead(&menuOptions[index2].imageIndex);
+		
+		Sprites::drawOverwrite(centreX + selectedIconWidth, centreY, MenuIcons, optionImageIndex1);
+		Sprites::drawOverwrite(centreX - selectedIconWidth, centreY, MenuIcons, optionImageIndex2);
+		Sprites::drawSelfMasked(centreX + selectedIconWidth -1, centreY - 1, OutlineBox, 0);
+		Sprites::drawSelfMasked(centreX - selectedIconWidth - 1, centreY - 1, OutlineBox, 0);
+	}
+	
+	// Draw selected option
+	const auto selectedOption = ProgmemRead(&menuOptions[this->selectedOption]);
+	Sprites::drawOverwrite(centreX, centreY, MenuIcons, selectedOption.imageIndex);
+	
+	// Get Arduboy reference
+	auto & arduboy = machine.getContext().arduboy;
 
-			MenuOption option = ProgmemRead(&menuOptions[index]);
-			Sprites::drawOverwrite(baseX, y, MenuIcons, option.imageIndex);
-
-			constexpr const auto textX = baseX + selectedIconWidth;
-			const auto textY = y + CalculateCentre(MenuIconHeight, FontLineHeight);
-
-			arduboy.setCursor(textX, textY);
-			arduboy.print(FlashString(option.text));
-		}
+	// Print option name
+	{
+		const auto optionWidth = ProgmemStringWidth(selectedOption.text);
+		const auto textX = HalfScreenWidth + CalculateCentre(HalfScreenWidth, optionWidth);
+		const auto textY = ScreenHeight - (FontLineHeight + singleMargin);
+			
+		arduboy.setCursor(textX, textY);		
+		arduboy.print(FlashString(selectedOption.text));
+	}
+	
+	// Print level number
+	{
+		const auto selectedLevel = machine.getContext().selectedLevel;
+		const auto digitCount = countDigitsConst(selectedLevel);
+		const auto digitWidth = StringWidth(digitCount);
+		const auto stringWidth = StringWidth(StringLevelHeading) + digitWidth;
+		const auto levelX = HalfScreenWidth + CalculateCentre(HalfScreenWidth, stringWidth);
+		arduboy.setCursor(levelX, singleMargin);
+		arduboy.print(FlashString(StringLevelHeading));
+		arduboy.print(selectedLevel);
 	}
 
+	// Grouping the drawRect calls reduces the code size somewhat
+	
 	// Draw selector
-	arduboy.drawRect(baseX - singleMargin, baseY - singleMargin, selectedIconWidth, selectedIconHeight, Arduboy::ColourWhite);
+	arduboy.drawRect(centreX - singleMargin, centreY - singleMargin, selectedIconWidth, selectedIconHeight, Arduboy::ColourWhite);
+	
+	// Draw box around option name
+	arduboy.drawRect(HalfScreenWidth, ScreenHeight - (FontLineHeight + doubleMargin), HalfScreenWidth, FontLineHeight + doubleMargin, Arduboy::ColourWhite);
+	
+	// Draw box around level number
+	arduboy.drawRect(HalfScreenWidth, 0, HalfScreenWidth, FontLineHeight + doubleMargin, Arduboy::ColourWhite);
+	
+	// Draw border
+	arduboy.drawRect(HalfScreenWidth, 0, HalfScreenWidth, ScreenHeight, Arduboy::ColourWhite);
 }
 
 //
